@@ -4,11 +4,11 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.Handler
-import android.support.v4.content.ContextCompat
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.GridLayoutManager
-import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.helper.ItemTouchHelper
+import androidx.core.content.ContextCompat
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.ItemTouchHelper
 import android.text.TextUtils
 import android.view.View
 import android.widget.Toast
@@ -20,15 +20,15 @@ import com.xwray.groupie.example.core.decoration.CarouselItemDecoration
 import com.xwray.groupie.example.core.decoration.DebugItemDecoration
 import com.xwray.groupie.example.core.decoration.SwipeTouchCallback
 import com.xwray.groupie.example.item.*
+import com.xwray.groupie.groupiex.plusAssign
 import kotlinx.android.synthetic.main.activity_main.*
-import java.util.*
 
-val INSET_TYPE_KEY = "inset_type"
-val INSET = "inset"
+const val INSET_TYPE_KEY = "inset_type"
+const val INSET = "inset"
 
 class MainActivity : AppCompatActivity() {
 
-    private val groupAdapter = GroupAdapter<ViewHolder>() //TODO get rid of this parameter
+    private val groupAdapter = GroupAdapter<GroupieViewHolder>() //TODO get rid of this parameter
     private lateinit var groupLayoutManager: GridLayoutManager
     private val prefs: Prefs by lazy { Prefs.get(this) }
     private val handler = Handler()
@@ -69,7 +69,7 @@ class MainActivity : AppCompatActivity() {
             spanSizeLookup = groupAdapter.spanSizeLookup
         }
 
-        recycler_view.apply {
+        recyclerView.apply {
             layoutManager = groupLayoutManager
             addItemDecoration(HeaderItemDecoration(gray, betweenPadding))
             addItemDecoration(InsetItemDecoration(gray, betweenPadding))
@@ -85,7 +85,7 @@ class MainActivity : AppCompatActivity() {
             })
         }
 
-        ItemTouchHelper(touchCallback).attachToRecyclerView(recycler_view)
+        ItemTouchHelper(touchCallback).attachToRecyclerView(recyclerView)
 
         fab.setOnClickListener { startActivity(Intent(this@MainActivity, SettingsActivity::class.java)) }
 
@@ -96,13 +96,12 @@ class MainActivity : AppCompatActivity() {
     private fun populateAdapter() {
 
         // Full bleed item
-        Section(HeaderItem(R.string.full_bleed_item)).apply {
+        groupAdapter += Section(HeaderItem(R.string.full_bleed_item)).apply {
             add(FullBleedCardItem(R.color.purple_200))
-            groupAdapter.add(this)
         }
 
         // Update in place group
-        Section().apply {
+        groupAdapter += Section().apply {
             val updatingHeader = HeaderItem(
                     R.string.updating_group,
                     R.string.updating_group_subtitle,
@@ -112,81 +111,75 @@ class MainActivity : AppCompatActivity() {
 
             updatingGroup.update(updatableItems)
             add(updatingGroup)
-            groupAdapter.add(this)
         }
 
         // Expandable group
         val expandableHeaderItem = ExpandableHeaderItem(R.string.expanding_group, R.string.expanding_group_subtitle)
-        ExpandableGroup(expandableHeaderItem).apply {
+        groupAdapter += ExpandableGroup(expandableHeaderItem).apply {
             for (i in 0..1) {
                 add(CardItem(rainbow200[1]))
             }
-            groupAdapter.add(this)
         }
 
         // Columns
-        Section(HeaderItem(R.string.vertical_columns)).apply {
+        groupAdapter += Section(HeaderItem(R.string.vertical_columns)).apply {
             add(makeColumnGroup())
-            groupAdapter.add(this)
         }
 
         // Group showing even spacing with multiple columns
-        Section(HeaderItem(R.string.multiple_columns)).apply {
+        groupAdapter += Section(HeaderItem(R.string.multiple_columns)).apply {
             for (i in 0..11) {
                 add(SmallCardItem(rainbow200[5]))
             }
-            groupAdapter.add(this)
         }
 
         // Swipe to delete (with add button in header)
         for (i in 0..2) {
-            swipeSection.add(SwipeToDeleteItem(rainbow200[6]))
+            swipeSection += SwipeToDeleteItem(rainbow200[6])
         }
-        groupAdapter.add(swipeSection)
+        groupAdapter += swipeSection
 
         // Horizontal carousel
-        Section(HeaderItem(R.string.carousel, R.string.carousel_subtitle)).apply {
+        groupAdapter += Section(HeaderItem(R.string.carousel, R.string.carousel_subtitle)).apply {
             add(makeCarouselItem())
-            groupAdapter.add(this)
         }
 
         // Update with payload
-        Section(HeaderItem(R.string.update_with_payload, R.string.update_with_payload_subtitle)).apply {
+        groupAdapter += Section(HeaderItem(R.string.update_with_payload, R.string.update_with_payload_subtitle)).apply {
             rainbow500.indices.forEach { i ->
-                add(HeartCardItem(rainbow200[i], i.toLong(), { item, favorite ->
+                add(HeartCardItem(rainbow200[i], i.toLong()) { item, favorite ->
                     // Pretend to make a network request
                     handler.postDelayed({
                         // Network request was successful!
                         item.setFavorite(favorite)
                         item.notifyChanged(FAVORITE)
                     }, 1000)
-                }))
+                })
             }
-            groupAdapter.add(this)
         }
 
         // Infinite loading section
-        groupAdapter.add(infiniteLoadingSection)
+        groupAdapter += infiniteLoadingSection
     }
 
     private fun makeColumnGroup(): ColumnGroup {
         val columnItems = ArrayList<ColumnItem>()
         for (i in 1..5) {
             // First five items are red -- they'll end up in a vertical column
-            columnItems.add(ColumnItem(rainbow200[0], i))
+            columnItems += ColumnItem(rainbow200[0], i)
         }
         for (i in 6..10) {
             // Next five items are pink
-            columnItems.add(ColumnItem(rainbow200[1], i))
+            columnItems += ColumnItem(rainbow200[1], i)
         }
         return ColumnGroup(columnItems)
     }
 
     private fun makeCarouselItem(): CarouselItem {
         val carouselDecoration = CarouselItemDecoration(gray, betweenPadding)
-        val carouselAdapter = GroupAdapter<ViewHolder>()
+        val carouselAdapter = GroupAdapter<GroupieViewHolder>()
         for (i in 0..29) {
-            carouselAdapter.add(CarouselCardItem(rainbow200[7]))
+            carouselAdapter += CarouselCardItem(rainbow200[7])
         }
         return CarouselItem(carouselDecoration, carouselAdapter)
     }
@@ -206,13 +199,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val onShuffleClicked = View.OnClickListener {
-        with(ArrayList(updatableItems)) {
-            Collections.shuffle(this)
+        ArrayList(updatableItems).apply {
+            shuffle()
             updatingGroup.update(this)
         }
 
         // You can also do this by forcing a change with payload
-        recycler_view.post { recycler_view.invalidateItemDecorations() }
+        recyclerView.post { recyclerView.invalidateItemDecorations() }
     }
 
     override fun onDestroy() {

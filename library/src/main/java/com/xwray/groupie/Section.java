@@ -1,9 +1,9 @@
 package com.xwray.groupie;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v7.util.DiffUtil;
-import android.support.v7.util.ListUpdateCallback;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListUpdateCallback;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,6 +44,9 @@ public class Section extends NestedGroup {
 
     public Section(@Nullable Group header, @NonNull Collection<? extends Group> children) {
         this.header = header;
+        if (header != null) {
+            header.registerGroupDataObserver(this);
+        }
         addAll(children);
     }
 
@@ -51,7 +54,7 @@ public class Section extends NestedGroup {
     public void add(int position, @NonNull Group group) {
         super.add(position, group);
         children.add(position, group);
-        final int notifyPosition = getHeaderItemCount() + getItemCount(children.subList(0, position));
+        final int notifyPosition = getHeaderItemCount() + GroupUtils.getItemCount(children.subList(0, position));
         notifyItemRangeInserted(notifyPosition, group.getItemCount());
         refreshEmptyState();
     }
@@ -62,7 +65,7 @@ public class Section extends NestedGroup {
         super.addAll(groups);
         int position = getItemCountWithoutFooter();
         this.children.addAll(groups);
-        notifyItemRangeInserted(position, getItemCount(groups));
+        notifyItemRangeInserted(position, GroupUtils.getItemCount(groups));
         refreshEmptyState();
     }
 
@@ -75,8 +78,8 @@ public class Section extends NestedGroup {
         super.addAll(position, groups);
         this.children.addAll(position, groups);
 
-        final int notifyPosition = getHeaderItemCount() + getItemCount(children.subList(0, position));
-        notifyItemRangeInserted(notifyPosition, getItemCount(groups));
+        final int notifyPosition = getHeaderItemCount() + GroupUtils.getItemCount(children.subList(0, position));
+        notifyItemRangeInserted(notifyPosition, GroupUtils.getItemCount(groups));
         refreshEmptyState();
     }
 
@@ -114,67 +117,69 @@ public class Section extends NestedGroup {
     }
 
     /**
+     * Remove all existing body content.
+     */
+    public void clear() {
+        if (children.isEmpty()) {
+            return;
+        }
+        removeAll(new ArrayList<>(children));
+    }
+
+    /**
      * Replace all existing body content and dispatch fine-grained change notifications to the
      * parent using DiffUtil.
      * <p>
      * Item comparisons are made using:
      * - Item.isSameAs(Item otherItem) (are items the same?)
-     * - Item.equals() (are contents the same?)
+     * - Item.hasSameContentAs() (are contents the same?)
      * <p>
-     * If you don't customize getId() or isSameAs() and equals(), the default implementations will return false,
+     * If you don't customize getId() or isSameAs() and hasSameContentAs(), the default implementations will return false,
      * meaning your Group will consider every update a complete change of everything.
      *
+     * This will default detectMoves to true.
+     *
+     * @see #update(Collection, boolean)
      * @param newBodyGroups The new content of the section
      */
     public void update(@NonNull final Collection<? extends Group> newBodyGroups) {
+        update(newBodyGroups, true);
+    }
 
+    /**
+     * Replace all existing body content and dispatch fine-grained change notifications to the
+     * parent using DiffUtil.
+     * <p>
+     * Item comparisons are made using:
+     * - Item.isSameAs(Item otherItem) (are items the same?)
+     * - Item.hasSameContentAs() (are contents the same?)
+     * <p>
+     * If you don't customize getId() or isSameAs() and hasSameContentAs(), the default implementations will return false,
+     * meaning your Group will consider every update a complete change of everything.
+     *
+     * @param newBodyGroups The new content of the section
+     * @param detectMoves is passed to {@link DiffUtil#calculateDiff(DiffUtil.Callback, boolean)}. Set to false if you
+     *                    don't want DiffUtil to detect moved items.
+     */
+    public void update(@NonNull final Collection<? extends Group> newBodyGroups, boolean detectMoves) {
         final List<Group> oldBodyGroups = new ArrayList<>(children);
-        final int oldBodyItemCount = getItemCount(oldBodyGroups);
-        final int newBodyItemCount = getItemCount(newBodyGroups);
+        final DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new DiffCallback(oldBodyGroups, newBodyGroups), detectMoves);
+        this.update(newBodyGroups, diffResult);
+    }
 
-        final DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new DiffUtil.Callback() {
-                @Override
-                public int getOldListSize() {
-                    return oldBodyItemCount;
-                }
-
-                @Override
-                public int getNewListSize() {
-                    return newBodyItemCount;
-                }
-
-                @Override
-                public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
-                    Item oldItem = getItem(oldBodyGroups, oldItemPosition);
-                    Item newItem = getItem(newBodyGroups, newItemPosition);
-                    return newItem.isSameAs(oldItem);
-                }
-
-                @Override
-                public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
-                    Item oldItem = getItem(oldBodyGroups, oldItemPosition);
-                    Item newItem = getItem(newBodyGroups, newItemPosition);
-                    return newItem.equals(oldItem);
-                }
-
-            @Nullable
-            @Override
-            public Object getChangePayload(int oldItemPosition, int newItemPosition) {
-                Item oldItem = getItem(oldBodyGroups, oldItemPosition);
-                Item newItem = getItem(newBodyGroups, newItemPosition);
-                return oldItem.getChangePayload(newItem);
-            }
-        });
-
+    /**
+     * Overloaded version of update method in which you can pass your own DiffUtil.DiffResult
+     * @param newBodyGroups The new content of the section
+     * @param diffResult
+     */
+    public void update(@NonNull final Collection<? extends Group> newBodyGroups, DiffUtil.DiffResult diffResult) {
         super.removeAll(children);
         children.clear();
         children.addAll(newBodyGroups);
         super.addAll(newBodyGroups);
-        
+
         diffResult.dispatchUpdatesTo(listUpdateCallback);
-        if (newBodyItemCount == 0 || oldBodyItemCount == 0) {
-            refreshEmptyState();
-        }
+        refreshEmptyState();
     }
 
     private ListUpdateCallback listUpdateCallback = new ListUpdateCallback() {
@@ -199,21 +204,6 @@ public class Section extends NestedGroup {
             notifyItemRangeChanged(getHeaderItemCount() + position, count, payload);
         }
     };
-
-    private static Item getItem(Collection<? extends Group> groups, int position) {
-        int previousPosition = 0;
-
-        for (Group group : groups) {
-            int size = group.getItemCount();
-            if (size + previousPosition > position) {
-                return group.getItem(position - previousPosition);
-            }
-            previousPosition += size;
-        }
-
-        throw new IndexOutOfBoundsException("Wanted item at " + position + " but there are only "
-                + previousPosition + " items");
-    }
 
     /**
      * Optional. Set a placeholder for when the section's body is empty.
@@ -256,7 +246,7 @@ public class Section extends NestedGroup {
      * @return
      */
     protected boolean isEmpty() {
-        return children.isEmpty() || getItemCount(children) == 0;
+        return children.isEmpty() || GroupUtils.getItemCount(children) == 0;
     }
 
     private void hideDecorations() {
@@ -290,7 +280,7 @@ public class Section extends NestedGroup {
     }
 
     private int getBodyItemCount() {
-        return isPlaceholderVisible ? getPlaceholderItemCount() : getItemCount(children);
+        return isPlaceholderVisible ? getPlaceholderItemCount() : GroupUtils.getItemCount(children);
     }
 
     private int getItemCountWithoutFooter() {
@@ -381,12 +371,21 @@ public class Section extends NestedGroup {
     public void setHeader(@NonNull Group header) {
         if (header == null)
             throw new NullPointerException("Header can't be null.  Please use removeHeader() instead!");
+        if (this.header != null) {
+            this.header.unregisterGroupDataObserver(this);
+        }
         int previousHeaderItemCount = getHeaderItemCount();
         this.header = header;
+        header.registerGroupDataObserver(this);
         notifyHeaderItemsChanged(previousHeaderItemCount);
     }
 
     public void removeHeader() {
+        if (this.header == null) {
+            return;
+        }
+
+        this.header.unregisterGroupDataObserver(this);
         int previousHeaderItemCount = getHeaderItemCount();
         this.header = null;
         notifyHeaderItemsChanged(previousHeaderItemCount);
@@ -406,12 +405,21 @@ public class Section extends NestedGroup {
     public void setFooter(@NonNull Group footer) {
         if (footer == null)
             throw new NullPointerException("Footer can't be null.  Please use removeFooter() instead!");
+        if (this.footer != null) {
+            this.footer.unregisterGroupDataObserver(this);
+        }
         int previousFooterItemCount = getFooterItemCount();
         this.footer = footer;
+        footer.registerGroupDataObserver(this);
         notifyFooterItemsChanged(previousFooterItemCount);
     }
 
     public void removeFooter() {
+        if (this.footer == null) {
+            return;
+        }
+
+        this.footer.unregisterGroupDataObserver(this);
         int previousFooterItemCount = getFooterItemCount();
         this.footer = null;
         notifyFooterItemsChanged(previousFooterItemCount);

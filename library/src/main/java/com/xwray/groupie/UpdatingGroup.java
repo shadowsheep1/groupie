@@ -1,8 +1,8 @@
 package com.xwray.groupie;
 
-import android.support.annotation.NonNull;
-import android.support.v7.util.DiffUtil;
-import android.support.v7.util.ListUpdateCallback;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListUpdateCallback;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,8 +16,8 @@ import java.util.List;
  * <p>
  * Item comparisons are made using:
  * - Item.getId() (are items the same?)
- * - Item.equals() (are contents the same?)
- * If you don't customize getId() or equals(), the default implementations will return false,
+ * - Item.hasSameContentAs() (are contents the same?)
+ * If you don't customize getId() or hasSameContentAs(), the default implementations will return false,
  * meaning your Group will consider every update a complete change of everything.
  */
 @Deprecated
@@ -98,7 +98,7 @@ public class UpdatingGroup extends NestedGroup {
         public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
             Item oldItem = items.get(oldItemPosition);
             Item newItem = newList.get(newItemPosition);
-            if (oldItem.getLayout() != newItem.getLayout()) {
+            if (oldItem.getViewType() != newItem.getViewType()) {
                 return false;
             }
             return oldItem.getId() == newItem.getId();
@@ -108,7 +108,7 @@ public class UpdatingGroup extends NestedGroup {
         public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
             Item oldItem = items.get(oldItemPosition);
             Item newItem = newList.get(newItemPosition);
-            return oldItem.equals(newItem);
+            return oldItem.hasSameContentAs(newItem);
         }
     }
 }

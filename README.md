@@ -9,21 +9,21 @@ Groupie lets you treat your content as logical groups and handles change notific
 # Try it out:
 
 ```gradle
-compile 'com.xwray:groupie:2.0.3'
+implementation "com.xwray:groupie:2.6.0"
 ```
 
 Groupie includes a module for Kotlin and Kotlin Android extensions. Never write a ViewHolder again—Kotlin generates view references and Groupie uses a generic holder. [Setup here.](#kotlin) 
 
 ```gradle
-compile 'com.xwray:groupie:2.0.3'
-compile 'com.xwray:groupie-kotlin-android-extensions:2.0.3'
+implementation "com.xwray:groupie:2.6.0"
+implementation "com.xwray:groupie-kotlin-android-extensions:2.6.0"
 ```
 
 Groupie also supports Android's [data binding](https://developer.android.com/topic/libraries/data-binding/index.html) to generate view holders. [Setup here.](#data-binding)
 
 ```gradle
-compile 'com.xwray:groupie:2.0.3'
-compile 'com.xwray:groupie-databinding:2.0.3' 
+implementation "com.xwray:groupie:2.6.0"
+implementation "com.xwray:groupie-databinding:2.6.0" 
 ```
 
 You can also use Groupie with Java and your existing ViewHolders. 
@@ -81,14 +81,14 @@ The `Item` class gives you simple callbacks to bind your model object to the gen
 
 ```kotlin
 import com.xwray.groupie.kotlinandroidextensions.Item
-import com.xwray.groupie.kotlinandroidextensions.ViewHolder
+import com.xwray.groupie.kotlinandroidextensions.GroupieViewHolder
 import kotlinx.android.synthetic.main.song.*
 
-class SongItem constructor(private val song: Song) : Item() {
+class SongItem(private val song: Song) : Item() {
 
     override fun getLayout() = R.layout.song
 
-    override fun bind(viewHolder: ViewHolder, position: Int) {
+    override fun bind(viewHolder: GroupieViewHolder, position: Int) {
         viewHolder.title.text = song.title
         viewHolder.title.artist = song.artist
     }
@@ -126,7 +126,7 @@ If you're converting existing ViewHolders, you can reference any named views (e.
 You can also mix and match `BindableItem` and other `Items` in the adapter, so you can leave legacy viewholders as they are by making an `Item<MyExistingViewHolder>`.  
 
 ### Legacy item (your own ViewHolder)
-You can leave legacy viewholders as they are by converting `MyExistingViewHolder` to extend Groupie's `ViewHolder` rather than `RecyclerView.ViewHolder`. Make sure to change the imports to `com.xwray.groupie.Item` and `com.xwray.groupie.ViewHolder`. 
+You can leave legacy viewholders as they are by converting `MyExistingViewHolder` to extend `GroupieViewHolder` rather than `RecyclerView.ViewHolder`. Make sure to change the imports to `com.xwray.groupie.Item` and `com.xwray.groupie.GroupieViewHolder`. 
 
 Finally, in your `Item<MyExistingViewHolder>`, override 
 
@@ -145,33 +145,42 @@ Items can also declare their own column span and whether they are draggable or s
 
 ## Kotlin
 
-In your app build.gradle file, include:
+In your project level `build.gradle` file, include:
 
-```gradle
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
 
+```
 buildscript {
-    ext.kotlin_version = '1.2.10'
+    ext.kotlin_version = '1.3.41'
     repositories {
         jcenter()
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "org.jetbrains.kotlin:kotlin-android-extensions:$kotlin_version"
     }
 }
+```
 
-// IMPORTANT!  Enables view caching in viewholders.
-// See: https://github.com/Kotlin/KEEP/blob/master/proposals/android-extensions-entity-caching.md
-androidExtensions {
-    experimental = true
+In your app `build.gradle` file, include:
+
+```
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+
+android {
+  ....
+  
+   // IMPORTANT!  Enables kotlin synthetic view properties.
+   // See: https://github.com/Kotlin/KEEP/blob/master/proposals/android-extensions-entity-caching.md
+    androidExtensions {
+        experimental = true
+    }
+	
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
-    implementation 'com.xwray:groupie:2.0.3'
-    implementation 'com.xwray:groupie-kotlin-android-extensions:2.0.3'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation 'com.xwray:groupie:[version]'
+    implementation 'com.xwray:groupie-kotlin-android-extensions:[version]'
 }
 ```
 
@@ -193,7 +202,7 @@ android {
 }
 
 dependencies {
-    compile 'com.xwray:groupie-databinding:2.0.3'
+    compile 'com.xwray:groupie-databinding:[version]'
 }
 ```
 

@@ -1,9 +1,9 @@
 package com.xwray.groupie.databinding;
 
-import android.databinding.DataBindingUtil;
-import android.databinding.ViewDataBinding;
-import android.support.annotation.CallSuper;
-import android.support.annotation.NonNull;
+import androidx.databinding.DataBindingUtil;
+import androidx.databinding.ViewDataBinding;
+import androidx.annotation.CallSuper;
+import androidx.annotation.NonNull;
 import android.view.View;
 
 import com.xwray.groupie.Item;
@@ -23,7 +23,7 @@ import java.util.List;
  *
  * @param <T> The ViewDataBinding subclass associated with this Item.
  */
-public abstract class BindableItem<T extends ViewDataBinding> extends Item<ViewHolder<T>> {
+public abstract class BindableItem<T extends ViewDataBinding> extends Item<GroupieViewHolder<T>> {
 
     public BindableItem() {
         super();
@@ -35,15 +35,15 @@ public abstract class BindableItem<T extends ViewDataBinding> extends Item<ViewH
 
     @NonNull
     @Override
-    public ViewHolder<T> createViewHolder(@NonNull View itemView) {
+    public GroupieViewHolder<T> createViewHolder(@NonNull View itemView) {
         T viewDataBinding = DataBindingUtil.bind(itemView);
-        return new ViewHolder<>(viewDataBinding);
+        return new GroupieViewHolder<>(viewDataBinding);
     }
 
     /**
      * Perform any actions required to set up the view for display.
      *
-     * @param holder              The viewholder to bind
+     * @param viewHolder          The viewHolder to bind
      * @param position            The adapter position
      * @param payloads            Any payloads (this list may be empty)
      * @param onItemClickListener An optional adapter-level click listener
@@ -51,19 +51,19 @@ public abstract class BindableItem<T extends ViewDataBinding> extends Item<ViewH
      */
     @CallSuper
     @Override
-    public void bind(@NonNull ViewHolder<T> holder, int position, @NonNull List<Object> payloads, OnItemClickListener onItemClickListener, OnItemLongClickListener onItemLongClickListener) {
-        super.bind(holder, position, payloads, onItemClickListener, onItemLongClickListener);
-        holder.binding.executePendingBindings();
+    public void bind(@NonNull GroupieViewHolder<T> viewHolder, int position, @NonNull List<Object> payloads, OnItemClickListener onItemClickListener, OnItemLongClickListener onItemLongClickListener) {
+        super.bind(viewHolder, position, payloads, onItemClickListener, onItemLongClickListener);
+        viewHolder.binding.executePendingBindings();
     }
 
     @Override
-    public void bind(@NonNull ViewHolder<T> viewHolder, int position) {
+    public void bind(@NonNull GroupieViewHolder<T> viewHolder, int position) {
         throw new RuntimeException("Doesn't get called");
     }
 
     @Override
-    public void bind(@NonNull ViewHolder<T> holder, int position, @NonNull List<Object> payloads) {
-        bind(holder.binding, position, payloads);
+    public void bind(@NonNull GroupieViewHolder<T> viewHolder, int position, @NonNull List<Object> payloads) {
+        bind(viewHolder.binding, position, payloads);
     }
 
     /**

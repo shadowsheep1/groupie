@@ -1,17 +1,17 @@
 package com.xwray.groupie.example.item
 
 import android.graphics.drawable.Animatable
-import android.support.annotation.ColorInt
+import androidx.annotation.ColorInt
 import com.xwray.groupie.example.INSET
 import com.xwray.groupie.example.INSET_TYPE_KEY
 import com.xwray.groupie.example.R
 import com.xwray.groupie.kotlinandroidextensions.Item
-import com.xwray.groupie.kotlinandroidextensions.ViewHolder
+import com.xwray.groupie.kotlinandroidextensions.GroupieViewHolder
 import kotlinx.android.synthetic.main.item_heart_card.*
 
 val FAVORITE = "FAVORITE"
 
-class HeartCardItem(@ColorInt private val colorRes: Int, id: Long,
+class HeartCardItem(@ColorInt private val colorInt: Int, id: Long,
                     private val onFavoriteListener: (item: HeartCardItem, favorite: Boolean) -> Unit) :
         Item(id) {
 
@@ -24,7 +24,7 @@ class HeartCardItem(@ColorInt private val colorRes: Int, id: Long,
 
     override fun getLayout() = R.layout.item_heart_card
 
-    private fun bindHeart(holder: ViewHolder) {
+    private fun bindHeart(holder: GroupieViewHolder) {
         if (inProgress) {
             animateProgress(holder)
         } else {
@@ -33,7 +33,7 @@ class HeartCardItem(@ColorInt private val colorRes: Int, id: Long,
         holder.favorite.isChecked = checked
     }
 
-    private fun animateProgress(holder: ViewHolder) {
+    private fun animateProgress(holder: GroupieViewHolder) {
         holder.favorite.apply {
             setImageResource(R.drawable.avd_favorite_progress)
             (drawable as Animatable).start()
@@ -47,8 +47,8 @@ class HeartCardItem(@ColorInt private val colorRes: Int, id: Long,
 
     override fun isClickable() = false
 
-    override fun bind(holder: ViewHolder, position: Int) {
-        //holder.getRoot().setBackgroundColor(colorRes);
+    override fun bind(holder: GroupieViewHolder, position: Int) {
+        holder.root.setBackgroundColor(colorInt)
         bindHeart(holder)
         holder.text.text = (id + 1).toString()
 
@@ -59,7 +59,7 @@ class HeartCardItem(@ColorInt private val colorRes: Int, id: Long,
         }
     }
 
-    override fun bind(holder: ViewHolder, position: Int, payloads: List<Any>) {
+    override fun bind(holder: GroupieViewHolder, position: Int, payloads: List<Any>) {
         if (payloads.contains(FAVORITE)) {
             bindHeart(holder)
         } else {

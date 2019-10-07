@@ -1,11 +1,11 @@
 package com.xwray.groupie.example.item
 
-import android.support.annotation.DrawableRes
-import android.support.annotation.StringRes
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import android.view.View
 import com.xwray.groupie.example.R
 import com.xwray.groupie.kotlinandroidextensions.Item
-import com.xwray.groupie.kotlinandroidextensions.ViewHolder
+import com.xwray.groupie.kotlinandroidextensions.GroupieViewHolder
 import kotlinx.android.synthetic.main.item_header.*
 
 open class HeaderItem(
@@ -18,7 +18,7 @@ open class HeaderItem(
         return R.layout.item_header
     }
 
-    override fun bind(viewHolder: ViewHolder, position: Int) {
+    override fun bind(viewHolder: GroupieViewHolder, position: Int) {
         viewHolder.title.setText(titleStringResId)
 
         viewHolder.subtitle.apply {

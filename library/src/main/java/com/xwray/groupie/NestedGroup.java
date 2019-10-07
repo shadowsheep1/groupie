@@ -1,8 +1,8 @@
 package com.xwray.groupie;
 
-import android.support.annotation.CallSuper;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.CallSuper;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,14 +22,6 @@ public abstract class NestedGroup implements Group, GroupDataObserver {
         int size = 0;
         for (int i = 0; i < getGroupCount(); i++) {
             Group group = getGroup(i);
-            size += group.getItemCount();
-        }
-        return size;
-    }
-
-    protected final int getItemCount(@NonNull Collection<? extends Group> groups) {
-        int size = 0;
-        for (Group group : groups) {
             size += group.getItemCount();
         }
         return size;
@@ -71,12 +63,6 @@ public abstract class NestedGroup implements Group, GroupDataObserver {
                 + getItemCount() + " items");
     }
 
-    /**
-     * Gets the position of an
-     *
-     * @param item
-     * @return
-     */
     public final int getPosition(@NonNull Item item) {
         int previousPosition = 0;
 

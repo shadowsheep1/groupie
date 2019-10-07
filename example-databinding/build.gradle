@@ -1,12 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion rootProject.compileSdkVersion
-    buildToolsVersion rootProject.buildToolsVersion
+    compileSdkVersion rootProject.sdkVersion
+
     defaultConfig {
         applicationId "com.xwray.groupie.example.databinding"
-        minSdkVersion rootProject.minSdkVersion
-        targetSdkVersion rootProject.targetSdkVersion
+        minSdkVersion rootProject.minimumSdkVersion
+        targetSdkVersion rootProject.sdkVersion
         versionCode 1
         versionName "1.0"
         vectorDrawables.useSupportLibrary true
@@ -26,11 +26,11 @@ android {
 }
 
 dependencies {
-    compile project(':library-databinding')
-    compile project(':example-shared')
-    compile "com.android.support:appcompat-v7:$supportLibVersion"
-    compile "com.android.support:design:$supportLibVersion"
-    compile "com.android.support:cardview-v7:$supportLibVersion"
-    compile "com.android.support:support-vector-drawable:$supportLibVersion"
-    compile "com.android.support:animated-vector-drawable:$supportLibVersion"
+    implementation project(':library-databinding')
+    implementation project(':example-shared')
+    implementation "androidx.appcompat:appcompat:1.0.2"
+    implementation "com.google.android.material:material:1.0.0"
+    implementation "androidx.cardview:cardview:1.0.0"
+    implementation "androidx.vectordrawable:vectordrawable:1.0.1"
+    implementation "androidx.vectordrawable:vectordrawable-animated:1.0.0"
 }

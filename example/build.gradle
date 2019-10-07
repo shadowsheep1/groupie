@@ -17,13 +17,12 @@ androidExtensions {
 }
 
 android {
-    compileSdkVersion rootProject.compileSdkVersion
-    buildToolsVersion rootProject.buildToolsVersion
+    compileSdkVersion rootProject.sdkVersion
 
     defaultConfig {
         applicationId "com.xwray.groupie.example"
-        minSdkVersion rootProject.minSdkVersion
-        targetSdkVersion rootProject.targetSdkVersion
+        minSdkVersion rootProject.minimumSdkVersion
+        targetSdkVersion rootProject.sdkVersion
         versionCode 1
         versionName "1.0"
         vectorDrawables.useSupportLibrary true
@@ -39,12 +38,11 @@ android {
 }
 
 dependencies {
-    compile project(':example-shared')
-    compile project(':library')
-    compile project(':library-kotlin-android-extensions')
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
-
+    implementation project(':example-shared')
+    implementation project(':library')
+    implementation project(':library-kotlin-android-extensions')
 }
+
 repositories {
     mavenCentral()
 }

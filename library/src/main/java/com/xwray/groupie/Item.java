@@ -1,10 +1,10 @@
 package com.xwray.groupie;
 
-import android.support.annotation.CallSuper;
-import android.support.annotation.LayoutRes;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.CallSuper;
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.RecyclerView;
 import android.view.View;
 
 import java.util.HashMap;
@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
-public abstract class Item<VH extends ViewHolder> implements Group, SpanSizeProvider {
+public abstract class Item<VH extends GroupieViewHolder> implements Group, SpanSizeProvider {
 
     private static AtomicLong ID_COUNTER = new AtomicLong(0);
     protected GroupDataObserver parentDataObserver;
@@ -29,24 +29,24 @@ public abstract class Item<VH extends ViewHolder> implements Group, SpanSizeProv
 
     @NonNull
     public VH createViewHolder(@NonNull View itemView) {
-        return (VH) new ViewHolder(itemView);
+        return (VH) new GroupieViewHolder(itemView);
     }
 
     /**
      * Perform any actions required to set up the view for display.
      *
-     * @param holder              The viewholder to bind
+     * @param viewHolder          The viewHolder to bind
      * @param position            The adapter position
      * @param payloads            Any payloads (this list may be empty)
      * @param onItemClickListener An optional adapter-level click listener
      * @param onItemLongClickListener An optional adapter-level long click listener
      */
     @CallSuper
-    public void bind(@NonNull VH holder, int position, @NonNull List<Object> payloads,
+    public void bind(@NonNull VH viewHolder, int position, @NonNull List<Object> payloads,
                      @Nullable OnItemClickListener onItemClickListener,
                      @Nullable OnItemLongClickListener onItemLongClickListener) {
-        holder.bind(this, onItemClickListener, onItemLongClickListener);
-        bind(holder, position, payloads);
+        viewHolder.bind(this, onItemClickListener, onItemLongClickListener);
+        bind(viewHolder, position, payloads);
     }
 
     public abstract void bind(@NonNull VH viewHolder, int position);
@@ -55,22 +55,22 @@ public abstract class Item<VH extends ViewHolder> implements Group, SpanSizeProv
      * If you don't specify how to handle payloads in your implementation, they'll be ignored and
      * the adapter will do a full rebind.
      *
-     * @param holder The ViewHolder to bind
+     * @param viewHolder The ViewHolder to bind
      * @param position The adapter position
      * @param payloads A list of payloads (may be empty)
      */
-    public void bind(@NonNull VH holder, int position, @NonNull List<Object> payloads) {
-        bind(holder, position);
+    public void bind(@NonNull VH viewHolder, int position, @NonNull List<Object> payloads) {
+        bind(viewHolder, position);
     }
 
     /**
      * Do any cleanup required for the viewholder to be reused.
      *
-     * @param holder The ViewHolder being recycled
+     * @param viewHolder The ViewHolder being recycled
      */
     @CallSuper
-    public void unbind(@NonNull VH holder) {
-        holder.unbind();
+    public void unbind(@NonNull VH viewHolder) {
+        viewHolder.unbind();
     }
 
     /**
@@ -99,6 +99,15 @@ public abstract class Item<VH extends ViewHolder> implements Group, SpanSizeProv
 
     @LayoutRes
     public abstract int getLayout();
+
+    /**
+     * Override this method if the same layout needs to have different viewTypes.
+     * @return the viewType, defaults to the layoutId
+     * @see RecyclerView.Adapter#getItemViewType(int)
+     */
+    public int getViewType() {
+        return getLayout();
+    }
 
     @Override
     public int getItemCount() {
@@ -179,14 +188,31 @@ public abstract class Item<VH extends ViewHolder> implements Group, SpanSizeProv
      * even if there has been a change in that data.
      * <p>
      * The default implementation compares both view type and id.
+     *
+     * @return True if the items are the same, false otherwise.
      */
     public boolean isSameAs(Item other) {
-        if (getLayout() != other.getLayout()) {
+        if (getViewType() != other.getViewType()) {
             return false;
         }
         return getId() == other.getId();
     }
 
+    /**
+     * Whether this item has the same content as another when compared using DiffUtil.
+     *
+     * After two items have been determined to be the same using {@link #isSameAs(Item)} this function
+     * should check whether their contents are the same.
+     *
+     * The default implementation does this using {@link #equals(Object)}
+     *
+     * @return True if both items have the same content, false otherwise
+     */
+    public boolean hasSameContentAs(Item other) {
+        return this.equals(other);
+    }
+
+    @Nullable
     public Object getChangePayload(Item newItem) {
         return null;
     }
